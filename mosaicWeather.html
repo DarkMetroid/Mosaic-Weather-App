@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Mosaic Weather App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js">
+    </script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'
+      type='text/css'>
+    <link rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+      crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" media="screen" href="style.css">
+
+
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+      class MosaicWeatherApp extends React.Component{
+        constructor (props){
+          super(props);
+          this.state = {
+            city: '', // The current city we're showing data for.
+            searchCity: '', // The value of the city input field.
+            foundCity: false, // The city we're looking for was found.
+            hasSearchError: false,
+            weatherData: {}
+          }
+          this.fetchWeather = this.fetchWeather.bind(this);
+          this.handleCityChange = this.handleCityChange.bind(this);
+        }
+
+        handleCityChange(e){
+          this.setState({searchCity: e.target.value});
+        }
+
+        fetchWeather(e){
+          var urlPrefix = "http://api.openweathermap.org/data/2.5/weather/?q=";
+
+          // TODO: In production don't store APPID locally.
+          var urlSuffix = "&APPID=5b41135eea950246afe108fcb821a852&units=metric";
+          var url = urlPrefix + this.state.searchCity + urlSuffix;
+
+          // Send a request to the openweather API
+          axios.get(url)
+            .then( (response)=> {
+              if (response.status == 200){
+                var newWeatherData = this.state.weatherData;
+                newWeatherData.today = {
+                  'icon': response.data.weather[0].icon,
+                  'temp': response.data.main.temp,
+                  'humidity': response.data.main.humidity
+                }
+                this.setState({foundCity: true, weatherData: newWeatherData,
+                city: this.state.searchCity, hasSearchError: false});
+              }
+            })
+            .catch((error)=> {
+              this.setState({hasSearchError: true, foundCity: false});
+          });
+          e.preventDefault();
+
+
+        }
+
+        render(){
+          return (
+            <div className="container">
+              <div className="row">
+                <div className="col-md-12">
+                  <h1 className="weatherPageHeading">Mosaic Weather App:</h1>
+                </div>
+              </div>
+              { this.state.hasSearchError &&
+                <div className="row">
+                  <div className="col-md-12 alert alert-danger">
+                    <p>An error has occurred, unfortunately we could not identify
+                      your city. Please try another search.</p>
+                  </div>
+                </div>
+              }
+              <div className="row">
+                <div className="col-md-12 input-group mb-3">
+                  <form className="cityForm" onSubmit={
+                      this.fetchWeather}>
+                    <input placeholder="Enter a city name" onChange={this.handleCityChange}
+                      className="form-control" type="text" />
+                    <div className="input-group-append">
+                      <button className="btn btn-outline-secondary"
+                        type="submit">Search For City</button>
+                    </div>
+                  </form>
+
+                </div>
+              </div>
+              { this.state.foundCity &&
+                <div>
+                  <div className="row">
+                    <div className="col-md-12">
+                      <h2>Displaying Results for: {this.state.city} </h2>
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="col-md-4">
+                      <h3> Today</h3>
+                      <img alt="Weather Icon"
+                        src={"http://openweathermap.org/img/w/"
+                          + this.state.weatherData.today.icon + '.png'}/>
+                      <p> Temperture: {this.state.weatherData.today.temp} &deg;C </p>
+                      <p> Humidity: {this.state.weatherData.today.humidity}% </p>
+                    </div>
+                  </div>
+                </div>
+              }
+
+            </div>
+
+
+          )
+        }
+      }
+
+      ReactDOM.render(
+        <MosaicWeatherApp/>, document.getElementById('root')
+      );
+    </script>
+</body>
+</html>

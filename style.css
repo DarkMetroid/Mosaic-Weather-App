@@ -1,0 +1,9 @@
+.weatherPageHeading{
+  margin-top: 25px;
+  margin-bottom: 25px;
+  text-align: center;
+}
+.cityForm{
+  display: inherit;
+  width: 100%;
+}
